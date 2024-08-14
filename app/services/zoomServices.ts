@@ -1,5 +1,13 @@
 import axios from "axios";
 
+export interface RegistrationResponse {
+  id: number;
+  join_url: string;
+  registrant_id: string;
+  start_time: string;
+  topic: string;
+}
+
 export interface Webinar {
   created_at: string;
   duration: number;
@@ -127,5 +135,51 @@ export const getWebinar = async (
 
     console.error("Error fetching webinar:", errorMessage);
     throw new Error(errorMessage);
+  }
+};
+
+export const addWebinarRegistrant = async ({
+  firstName,
+  lastName,
+  email,
+  accessToken,
+  webinarId,
+}: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  accessToken: string;
+  webinarId: string;
+}): Promise<RegistrationResponse | null> => {
+  try {
+    const res = await axios.post(
+      `${process.env.ZoomApiBaseUrl}/v2/webinars/${webinarId}/registrants`,
+      {
+        email,
+        first_name: firstName,
+        last_name: lastName,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    console.log("zoom registration response: ", res);
+
+    return res.data;
+  } catch (error) {
+    // let errorMessage = "Failed to add webinar registrant";
+    // if (axios.isAxiosError(error)) {
+    //   if (error.response) {
+    //     errorMessage =
+    //       error.response.data?.messager || error.response.data || error.message;
+    //   } else {
+    //     errorMessage = error.message;
+    //   }
+    // }
+    console.error("Error adding webinar registrant:", error);
+    return null;
   }
 };
