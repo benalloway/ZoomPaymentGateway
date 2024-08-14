@@ -66,6 +66,7 @@ export default function Webinar() {
                   <Input
                     name="first_name"
                     autoComplete="given-name"
+                    autoCapitalize="words"
                     type="text"
                     required
                   />
@@ -75,6 +76,7 @@ export default function Webinar() {
                   <Input
                     name="last_name"
                     autoComplete="family-name"
+                    autoCapitalize="words"
                     type="text"
                     required
                   />
