@@ -2,32 +2,28 @@ import {
   ActionFunctionArgs,
   json,
   LoaderFunctionArgs,
+  redirect,
 } from "@remix-run/cloudflare";
 import { Form, useActionData, useLoaderData } from "@remix-run/react";
-import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 
 import { Button } from "~/components/Button";
 import { Divider } from "~/components/Divider";
-import {
-  Field,
-  FieldGroup,
-  Fieldset,
-  Label,
-  Legend,
-} from "~/components/Fieldset";
-import { Heading, Subheading } from "~/components/Heading";
+import { Field, FieldGroup, Fieldset, Label } from "~/components/Fieldset";
+import { Subheading } from "~/components/Heading";
 import { Input } from "~/components/Input";
 import { Text } from "~/components/Text";
 import {
+  addWebinarRegistrant,
   getAccessToken,
   getWebinar,
   WebinarDetail,
-} from "~/services/zoom/zoomServices";
+} from "~/services/zoomServices";
 import {
   DescriptionDetails,
   DescriptionList,
   DescriptionTerm,
 } from "~/components/DescriptionList";
+import { captureAndCharge } from "~/services/authorizeNetServices";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const accessToken = await getAccessToken();
@@ -48,37 +44,62 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     credit_card_number: formData.get("credit_card_number") as string,
     credit_card_expiration: formData.get("credit_card_expiration") as string,
     credit_card_cvc: formData.get("credit_card_cvc") as string,
+    webinar_price: formData.get("webinar_price") as string,
+    webinar_id: formData.get("webinar_id") as string,
   };
 
-  console.log(data);
+  // console.log(data);
 
+  
   // authorize and charge card on authorizeNet
+  const captureResponse = await captureAndCharge({
+    amount: data.webinar_price,
+    cardCode: data.credit_card_cvc,
+    cardNumber: data.credit_card_number,
+    expDate: data.credit_card_expiration,
+  });
 
-  const chargeRes = false;
-
-  // if not successfully charged, display error returned from authorizeNet
-  // - return json({errorMessage})
-  if (!chargeRes) return json({ errorMessage: "unable to charge card" });
+  if (captureResponse?.transactionResponse?.responseCode !== "1") {
+    // if not successfully charged, display error returned from authorizeNet
+    // - return json({errorMessage})
+    console.log(captureResponse?.messages?.message);
+    return json({ errorMessage: "Unable to charge card" });
+  }
 
   // if successfully charged, register for zoom webinar
-  // return redirect("/webinars/registration-confirmation", {
-  //     headers: {
-  //         ""
-  //     }
-  // })
 
-  // If cannot successfully register, display "we successfully charged your card, please reach out for us to register you for event"
-  // - return json({errorMessage})
+  const accessToken = await getAccessToken();
+
+  if (!accessToken?.trim())
+    return json({ errorMessage: "Unable to get accessToken" });
+
+  const registrationResponse = await addWebinarRegistrant({
+    accessToken,
+    email: data.email,
+    firstName: data.first_name,
+    lastName: data.last_name,
+    webinarId: data.webinar_id,
+  });
 
   // if successfully registered, redirect to confirmation page and display results of registration (webinar date, join url, add-to-calendar, etc.)
   // - make sure to retry a few times
 
-  return null;
+  if (registrationResponse !== null) {
+    return redirect(
+      `/webinars/registration-confirmation?webinar_id=${registrationResponse.id}&join_url=${registrationResponse.join_url}&start_time=${registrationResponse.start_time}&topic=${registrationResponse.topic}&registrant_id=${registrationResponse.registrant_id}`
+    );
+  }
+
+  // console.log(registrationResponse);
+
+  return json({ errorMessage: "Unable to register for webinar" });
 };
 
 export default function Webinar() {
   const webinar: WebinarDetail = useLoaderData();
   const actionData = useActionData<typeof action>();
+
+  console.log(actionData);
 
   return (
     <div>
@@ -108,6 +129,8 @@ export default function Webinar() {
       </DescriptionList>
       <section className="mt-10">
         <Form method="post">
+          <input name="webinar_id" value={webinar.id} readOnly hidden />
+          <input name="webinar_price" value={14.99} readOnly hidden />
           <Fieldset>
             <FieldGroup>
               <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-4">
