@@ -6,6 +6,9 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 import "./tailwind.css";
+import { StackedLayout } from "./components/StackedLayout";
+import { Navbar } from "./components/Navbar";
+import { Sidebar } from "./components/Sidebar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,7 +20,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <StackedLayout navbar={<Navbar></Navbar>} sidebar={<Sidebar></Sidebar>}>
+          {children}
+        </StackedLayout>
         <ScrollRestoration />
         <Scripts />
       </body>
