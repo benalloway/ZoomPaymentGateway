@@ -1,27 +1,17 @@
-import axios from "axios";
-
 import { Link } from "~/components/Link";
 import { Divider } from "~/components/Divider";
 import { Heading } from "~/components/Heading";
 import { json, useLoaderData } from "@remix-run/react";
-import { getWebinars } from "~/services/zoom/zoomServices";
+import {
+  getAccessToken,
+  getWebinars,
+  Webinar,
+} from "~/services/zoom/zoomServices";
 
 export async function loader() {
-  // move this to one place and leverage session storage server side to store the token?
-  const tokenResponse = await axios.post("https://zoom.us/oauth/token", null, {
-    params: {
-      grant_type: "account_credentials",
-      account_id: process.env.ZoomApiAccountId,
-    },
-    auth: {
-      username: process.env.ZoomApiClientId!,
-      password: process.env.ZoomApiClientSecret!,
-    },
-    timeout: 3000,
-  });
-
-  const accessToken = tokenResponse.data.access_token;
-  const webinars = await getWebinars(accessToken);
+  // todo: move this to one place and leverage session storage server side to store the token?
+  const accessToken = await getAccessToken();
+  const webinars: Webinar[] = await getWebinars(accessToken);
   return json(webinars);
 }
 

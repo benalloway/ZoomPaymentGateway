@@ -34,7 +34,41 @@ export interface WebinarDetail {
   is_simulive: boolean;
 }
 
-export const getWebinars = async (accessToken: string) => {
+export const getAccessToken = async (): Promise<string> => {
+  return await axios
+    .post("https://zoom.us/oauth/token", null, {
+      params: {
+        grant_type: "account_credentials",
+        account_id: process.env.ZoomApiAccountId,
+      },
+      auth: {
+        username: process.env.ZoomApiClientId!,
+        password: process.env.ZoomApiClientSecret!,
+      },
+      timeout: 3000,
+    })
+    .then((response) => {
+      return response.data.access_token;
+    })
+    .catch((error) => {
+      let errorMessage = "Failed to fetch access token";
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          errorMessage =
+            error.response.data?.messager ||
+            error.response.data ||
+            error.message;
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      console.error("Error fetching access token:", errorMessage);
+      throw new Error(errorMessage);
+    });
+};
+
+export const getWebinars = async (accessToken: string): Promise<Webinar[]> => {
   try {
     const response = await axios.get(
       `${process.env.ZoomApiBaseUrl}/v2/users/me/webinars`,
@@ -66,7 +100,10 @@ export const getWebinars = async (accessToken: string) => {
   }
 };
 
-export const getWebinar = async (accessToken: string, webinarId: string) => {
+export const getWebinar = async (
+  accessToken: string,
+  webinarId: string
+): Promise<WebinarDetail> => {
   try {
     const response = await axios.get(
       `${process.env.ZoomApiBaseUrl}/v2/webinars/${webinarId}`,
