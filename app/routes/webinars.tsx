@@ -1,20 +1,33 @@
-import React from "react";
+import axios from "axios";
 
 import { Link } from "~/components/Link";
 import { Divider } from "~/components/Divider";
 import { Heading } from "~/components/Heading";
+import { json, useLoaderData } from "@remix-run/react";
+import { getWebinars } from "~/services/zoom/zoomServices";
+
+export async function loader() {
+  // move this to one place and leverage session storage server side to store the token?
+  const tokenResponse = await axios.post("https://zoom.us/oauth/token", null, {
+    params: {
+      grant_type: "account_credentials",
+      account_id: process.env.ZoomApiAccountId,
+    },
+    auth: {
+      username: process.env.ZoomApiClientId!,
+      password: process.env.ZoomApiClientSecret!,
+    },
+    timeout: 3000,
+  });
+
+  const accessToken = tokenResponse.data.access_token;
+  const webinars = await getWebinars(accessToken);
+  return json(webinars);
+}
 
 export default function Webinars() {
-  const [webinars, setWebinars] = React.useState([
-    {
-      agenda: "This is the agenda",
-      duration: 60,
-      id: 123,
-      topic: "This is the topic",
-      timezone: "est",
-      start_time: "2022-01-01T00:00:00Z",
-    },
-  ]);
+  const webinars = useLoaderData<typeof loader>();
+
   return (
     <div>
       <Heading>Webinars</Heading>
@@ -22,7 +35,7 @@ export default function Webinars() {
         {webinars.map((webinar) => {
           return (
             <Link key={webinar.id} href={`/webinars/${webinar.id}`}>
-              <li>
+              <li key={webinar.id}>
                 <Divider />
                 <div className="space-y-1.5">
                   <div className="text-base/6 font-semibold">
@@ -32,7 +45,6 @@ export default function Webinars() {
                   </div>
                   <div className="text-xs/6 text-zinc-500"></div>
                   <div className="text-xs/6 text-zinc-500">
-                    {webinar.agenda}
                     {webinar.start_time} <span aria-hidden="true">·</span>{" "}
                     {webinar.timezone}
                   </div>
