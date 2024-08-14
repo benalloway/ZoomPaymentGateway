@@ -2,15 +2,19 @@ import { Link } from "~/components/Link";
 import { Divider } from "~/components/Divider";
 import { Heading } from "~/components/Heading";
 import { json, useLoaderData } from "@remix-run/react";
-import {
-  getAccessToken,
-  getWebinars,
-  Webinar,
-} from "~/services/zoomServices";
+import { getAccessToken, getWebinars, Webinar } from "~/services/zoomServices";
+import { LoaderFunctionArgs } from "@remix-run/cloudflare";
 
-export async function loader() {
+export async function loader({ context }: LoaderFunctionArgs) {
+  const zoomApiClientId = context.cloudflare.env.ZoomApiClientId;
+  const zoomApiClientSecret = context.cloudflare.env.ZoomApiClientSecret;
+  const zoomApiAccountId = context.cloudflare.env.ZoomApiAccountId;
   // todo: move this to one place and leverage session storage server side to store the token?
-  const accessToken = await getAccessToken();
+  const accessToken = await getAccessToken({
+    zoomApiClientId,
+    zoomApiClientSecret,
+    zoomApiAccountId,
+  });
   const webinars: Webinar[] = await getWebinars(accessToken);
   return json(webinars);
 }

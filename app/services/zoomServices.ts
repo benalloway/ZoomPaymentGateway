@@ -42,16 +42,24 @@ export interface WebinarDetail {
   is_simulive: boolean;
 }
 
-export const getAccessToken = async (): Promise<string> => {
+export const getAccessToken = async ({
+  zoomApiAccountId,
+  zoomApiClientId,
+  zoomApiClientSecret,
+}: {
+  zoomApiAccountId: string;
+  zoomApiClientId: string;
+  zoomApiClientSecret: string;
+}): Promise<string> => {
   return await axios
     .post("https://zoom.us/oauth/token", null, {
       params: {
         grant_type: "account_credentials",
-        account_id: process.env.ZoomApiAccountId,
+        account_id: zoomApiAccountId,
       },
       auth: {
-        username: process.env.ZoomApiClientId!,
-        password: process.env.ZoomApiClientSecret!,
+        username: zoomApiClientId!,
+        password: zoomApiClientSecret!,
       },
       timeout: 3000,
     })
@@ -78,14 +86,11 @@ export const getAccessToken = async (): Promise<string> => {
 
 export const getWebinars = async (accessToken: string): Promise<Webinar[]> => {
   try {
-    const response = await axios.get(
-      `${process.env.ZoomApiBaseUrl}/v2/users/me/webinars`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const response = await axios.get(`https://zoom.us/v2/users/me/webinars`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     const webinars: Webinar[] = response.data.webinars;
     const now = new Date();
     const filteredWebinars: Webinar[] = webinars.filter(
@@ -114,7 +119,7 @@ export const getWebinar = async (
 ): Promise<WebinarDetail> => {
   try {
     const response = await axios.get(
-      `${process.env.ZoomApiBaseUrl}/v2/webinars/${webinarId}`,
+      `https://zoom.us/v2/webinars/${webinarId}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -153,7 +158,7 @@ export const addWebinarRegistrant = async ({
 }): Promise<RegistrationResponse | null> => {
   try {
     const res = await axios.post(
-      `${process.env.ZoomApiBaseUrl}/v2/webinars/${webinarId}/registrants`,
+      `https://zoom.us/v2/webinars/${webinarId}/registrants`,
       {
         email,
         first_name: firstName,

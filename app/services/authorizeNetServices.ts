@@ -61,11 +61,15 @@ export interface TransactionResponseData {
 }
 
 export const captureAndCharge = async ({
+  authorizeNetApiLoginId,
+  authorizeNetApiTransactionKey,
   amount,
   cardNumber,
   expDate,
   cardCode,
 }: {
+  authorizeNetApiLoginId: string;
+  authorizeNetApiTransactionKey: string;
   amount: string;
   cardNumber: string;
   expDate: string;
@@ -74,8 +78,8 @@ export const captureAndCharge = async ({
   const payload: TransactionRequest = {
     createTransactionRequest: {
       merchantAuthentication: {
-        name: process.env.AuthorizeNetApiLoginId!,
-        transactionKey: process.env.AuthorizeNetApiTransactionKey!,
+        name: authorizeNetApiLoginId,
+        transactionKey: authorizeNetApiTransactionKey,
       },
       transactionRequest: {
         transactionType: "authCaptureTransaction",
@@ -92,7 +96,7 @@ export const captureAndCharge = async ({
   };
 
   try {
-    const response = await axios.post(process.env.AuthorizeNetApiUrl!, payload);
+    const response = await axios.post("https://apitest.authorize.net/xml/v1/request.api", payload);
     console.log("Authorize.net Response:", response.data);
     return response.data;
   } catch (error) {

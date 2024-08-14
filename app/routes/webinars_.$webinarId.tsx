@@ -25,16 +25,34 @@ import {
 } from "~/components/DescriptionList";
 import { captureAndCharge } from "~/services/authorizeNetServices";
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
-  const accessToken = await getAccessToken();
+export const loader = async ({ params, context }: LoaderFunctionArgs) => {
+  const zoomApiClientId = context.cloudflare.env.ZoomApiClientId;
+  const zoomApiClientSecret = context.cloudflare.env.ZoomApiClientSecret;
+  const zoomApiAccountId = context.cloudflare.env.ZoomApiAccountId;
+
+  const accessToken = await getAccessToken({
+    zoomApiClientId,
+    zoomApiClientSecret,
+    zoomApiAccountId,
+  });
+
   const webinar: WebinarDetail = await getWebinar(
     accessToken,
     params.webinarId!
   );
+
   return json(webinar);
 };
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request, context }: ActionFunctionArgs) => {
+  const authorizeNetApiLoginId = context.cloudflare.env.AuthorizeNetApiLoginId;
+  const authorizeNetApiTransactionKey =
+    context.cloudflare.env.AuthorizeNetApiTransactionKey;
+
+  const zoomApiClientId = context.cloudflare.env.ZoomApiClientId;
+  const zoomApiClientSecret = context.cloudflare.env.ZoomApiClientSecret;
+  const zoomApiAccountId = context.cloudflare.env.ZoomApiAccountId;
+
   const formData = await request.formData();
 
   const data = {
@@ -50,9 +68,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   // console.log(data);
 
-  
   // authorize and charge card on authorizeNet
   const captureResponse = await captureAndCharge({
+    authorizeNetApiLoginId,
+    authorizeNetApiTransactionKey,
     amount: data.webinar_price,
     cardCode: data.credit_card_cvc,
     cardNumber: data.credit_card_number,
@@ -68,7 +87,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   // if successfully charged, register for zoom webinar
 
-  const accessToken = await getAccessToken();
+  const accessToken = await getAccessToken({
+    zoomApiClientId,
+    zoomApiClientSecret,
+    zoomApiAccountId,
+  });
 
   if (!accessToken?.trim())
     return json({ errorMessage: "Unable to get accessToken" });
