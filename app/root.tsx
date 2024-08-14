@@ -15,7 +15,6 @@ import {
   NavbarSection,
 } from "./components/Navbar";
 import { Sidebar } from "./components/Sidebar";
-import { Avatar } from "./components/Avatar";
 import { Link } from "./components/Link";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -34,7 +33,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           navbar={
             <Navbar>
               <Link href="/">
-                <Avatar className="size-10" src="/public/favicon.ico" />
+                <img
+                  className="size-14"
+                  src="https://us02st2.zoom.us/static/6.3.24343/image/new/topNav/Zoom_logo.svg"
+                  alt="Zoom logo"
+                />
               </Link>
               <NavbarDivider />
               <NavbarSection>
