@@ -6,7 +6,7 @@ import {
   getAccessToken,
   getWebinars,
   Webinar,
-} from "~/services/zoom/zoomServices";
+} from "~/services/zoomServices";
 
 export async function loader() {
   // todo: move this to one place and leverage session storage server side to store the token?
