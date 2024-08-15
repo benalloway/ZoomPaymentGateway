@@ -1,7 +1,11 @@
-# Welcome to Remix + Cloudflare!
+# Welcome to the Zoom Payment Gateway!
+This is a POC for building a payment gateway to stand in front of a professional zoom account, to allow users to bring their own payment gateways to paywall zoom webinars, instead of being limited to the 2 options Zoom provides (stripe & Paypal). 
 
-- 📖 [Remix docs](https://remix.run/docs)
-- 📖 [Remix Cloudflare docs](https://remix.run/guides/vite#cloudflare)
+- List upcoming webinars for a zoom account
+- Allow for payment authorization & charging for entry into webinar
+- Allow for registration to webinar
+
+
 
 ## Development
 
